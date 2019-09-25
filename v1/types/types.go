@@ -8,6 +8,7 @@ const (
 	// type ProductCode
 	BTCJPY   ProductCode = "BTC_JPY"
 	FXBTCJPY ProductCode = "FX_BTC_JPY"
+	ETHJPY   ProductCode = "ETH_JPY"
 	ETHBTC   ProductCode = "ETH_BTC"
 	// BTCFUTURE1 = "BTCJPY27SEP2019"
 	// BTCFUTURE2 = "BTCJPY30AUG2019"
