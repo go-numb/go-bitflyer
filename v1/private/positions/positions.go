@@ -77,13 +77,13 @@ func (p *T) Lot(side int, tension float64) (bool, float64) {
 		return true, 0
 	}
 
-	// lot := -(p.Limit * p.bias(tension))
-	lot := math.Abs(p.Limit * p.bias(tension))
-	lot = math.RoundToEven(lot*1000) * 0.001
+	var adjust = 0.001
+
+	lot := math.RoundToEven(math.Abs(p.Limit*p.bias(tension))/adjust) * adjust
 	if lot < p.Min {
 		return false, p.Min
 	}
-	return false, lot
+	return false, math.Min(p.Limit, lot)
 }
 
 // bias is positions bias
