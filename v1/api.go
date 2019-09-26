@@ -53,7 +53,7 @@ func ToSize(size float64) float64 {
 	if size < 0.01 {
 		return 0.01
 	}
-	return math.Trunc(size/0.01) * 0.01
+	return math.Trunc(size/0.001) * 0.001
 }
 
 func ToTimeByOrderID(s string) (time.Time, error) {
