@@ -53,7 +53,8 @@ func ToSize(size float64) float64 {
 	if size < 0.01 {
 		return 0.01
 	}
-	return math.Trunc(size/0.001) * 0.001
+	// 微細玉での調整が好ましいが、bitflyer負荷を鑑み配慮
+	return math.Trunc(size/0.0001) * 0.0001
 }
 
 func ToTimeByOrderID(s string) (time.Time, error) {
@@ -137,7 +138,7 @@ func (p *Limit) FromHeader(h http.Header) {
 }
 
 func (p *Limit) Check() error {
-	if p.Remain <= 0 {
+	if p.Remain <= 1 { // 急変時、bitflyer APIがRemain回復しない調整を行う場合、Remain:1が返ってくるため
 		if time.Now().After(p.Reset) { // APIRESET時間を過ぎていたらRemainを補充
 			p.Remain = APIREMAIN
 		}
