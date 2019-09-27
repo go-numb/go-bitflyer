@@ -54,7 +54,7 @@ func ToSize(size float64) float64 {
 		return 0.01
 	}
 	// 微細玉での調整が好ましいが、bitflyer負荷を鑑み配慮
-	return math.Trunc(size/0.0001) * 0.0001
+	return math.RoundToEven(size/0.0001) * 0.0001
 }
 
 func ToTimeByOrderID(s string) (time.Time, error) {
