@@ -77,7 +77,7 @@ func (p *T) Lot(side int, tension float64) (bool, float64) {
 		return true, 0
 	}
 
-	lot := math.RoundToEven(math.Abs(p.Limit * p.bias(tension)))
+	lot := math.Abs(p.Limit * p.bias(tension))
 	if lot < p.Min {
 		return false, p.Min
 	}
