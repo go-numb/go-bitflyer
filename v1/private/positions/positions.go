@@ -74,7 +74,7 @@ func (p *T) Set(size float64) {
 // p.Sizeに対応するsizeが返ってくる
 func (p *T) Lot(side int, tension float64) (bool, float64) {
 
-	bias := math.Tanh(tension * p.Size / p.Limit)
+	bias := p.bias(tension)
 	size := p.Limit * bias
 	if p.isFull(side, size) {
 		return true, 0
