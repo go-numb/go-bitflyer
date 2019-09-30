@@ -71,17 +71,24 @@ func (p *T) Set(size float64) {
 }
 
 // Lot is Size for order lot
-// p.Sizeに対応する解消符号でsizeが返ってくる
+// p.Sizeに対応するsizeが返ってくる
 func (p *T) Lot(side int, tension float64) (bool, float64) {
 	if p.isFull(side) {
 		return true, 0
 	}
 
 	lot := math.Abs(p.Limit * p.bias(tension))
-	if lot < p.Min {
+	if lot < p.Min { // setting minsize
 		return false, p.Min
 	}
-	return false, math.Min(p.Limit, lot)
+
+	lot = math.Min(p.Limit, lot)
+	// when a new order is filled and the limit is execution
+	if p.Limit < math.Abs(p.Size+(float64(side)*lot)) {
+		return false, p.Min
+	}
+
+	return false, lot
 }
 
 // bias is positions bias
