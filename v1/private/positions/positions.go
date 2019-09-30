@@ -73,22 +73,14 @@ func (p *T) Set(size float64) {
 // Lot is Size for order lot
 // p.Sizeに対応するsizeが返ってくる
 func (p *T) Lot(side int, tension float64) (bool, float64) {
-	if p.isFull(side) {
+
+	bias := math.Tanh(tension * p.Size / p.Limit)
+	size := p.Limit * bias
+	if p.isFull(side, size) {
 		return true, 0
 	}
 
-	lot := math.Abs(p.Limit * p.bias(tension))
-	if lot < p.Min { // setting minsize
-		return false, p.Min
-	}
-
-	lot = math.Min(p.Limit, lot)
-	// when a new order is filled and the limit is execution
-	if p.Limit < math.Abs(p.Size+(float64(side)*lot)) {
-		return false, p.Min
-	}
-
-	return false, lot
+	return false, math.Max(p.Min, math.Abs(size))
 }
 
 // bias is positions bias
@@ -98,11 +90,29 @@ func (p *T) bias(tension float64) float64 {
 
 // isFull is checks Limit&Size
 // 売り方向要望を受け、同方向建玉過多ならばisFull
-func (p *T) isFull(side int) bool {
-	if 0 < side && p.Limit < p.Size {
-		return true
-	} else if side < 0 && p.Size < -p.Limit {
-		return true
+func (p *T) isFull(side int, size float64) bool {
+	if 0 < side { // 新規買い注文
+		if p.Limit < p.Size {
+			return true
+		}
+		if p.Limit < p.Size+math.Abs(size) {
+			return true
+		}
+		if p.Limit < p.Size+p.Min {
+			return true
+		}
+
+	} else if side < 0 { // 新規売り注文
+		if p.Limit < math.Abs(p.Size) {
+			return true
+		}
+		if p.Limit < math.Abs(p.Size)-math.Abs(size) {
+			return true
+		}
+		if p.Limit < math.Abs(p.Size-p.Min) {
+			return true
+		}
+
 	}
 
 	return false
