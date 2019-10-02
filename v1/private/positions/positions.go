@@ -80,6 +80,8 @@ func (p *T) Lot(side int, tension float64) (bool, float64) {
 		return true, 0
 	}
 
+	size = p.checkSame(side, size)
+
 	return false, math.Max(p.Min, math.Abs(size))
 }
 
@@ -116,4 +118,15 @@ func (p *T) isFull(side int, size float64) bool {
 	}
 
 	return false
+}
+
+func (p *T) checkSame(side int, size float64) float64 {
+	if p.Min < math.Abs(size) { // 注文多重化の際、買い建玉に買い注文過多を避ける目的
+		if 0 < side && 0 < p.Size {
+			size = p.Min
+		} else if side < 0 && p.Size < 0 {
+			size = p.Min
+		}
+	}
+	return size
 }
