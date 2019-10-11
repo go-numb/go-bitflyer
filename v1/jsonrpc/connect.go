@@ -1,10 +1,11 @@
 package jsonrpc
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/json-iterator/go"
 
 	"github.com/buger/jsonparser"
 
@@ -19,6 +20,8 @@ import (
 	"github.com/go-numb/go-bitflyer/v1/public/ticker"
 	"golang.org/x/net/websocket"
 )
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 const (
 	All Types = iota
