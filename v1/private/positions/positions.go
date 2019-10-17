@@ -105,13 +105,13 @@ func (p *T) isFull(side int, size float64) bool {
 		}
 
 	} else if side < 0 { // 新規売り注文
-		if p.Limit < math.Abs(p.Size) {
+		if p.Size < -p.Limit {
 			return true
 		}
-		if p.Limit < math.Abs(p.Size)-math.Abs(size) {
+		if p.Size-math.Abs(size) < -p.Limit {
 			return true
 		}
-		if p.Limit < math.Abs(p.Size-p.Min) {
+		if p.Size-math.Abs(p.Min) < -p.Limit {
 			return true
 		}
 
