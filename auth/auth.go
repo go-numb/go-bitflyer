@@ -55,7 +55,7 @@ func SetAuthHeaders(config *AuthConfig, api api.API, req api.Request) (*http.Hea
 }
 
 // WsParamForPrivate return util for private websocket
-func WsParamForPrivate(key, sercret string) (now int, apikey, nonce, sign string) {
+func WsParamForPrivate(sercret string) (now int, nonce, sign string) {
 	mac := hmac.New(sha256.New, []byte(sercret))
 
 	t := time.Now().UTC()
@@ -67,5 +67,5 @@ func WsParamForPrivate(key, sercret string) (now int, apikey, nonce, sign string
 	mac.Write([]byte(fmt.Sprintf("%d%s", now, nonce)))
 
 	sign = hex.EncodeToString(mac.Sum(nil))
-	return now, key, nonce, sign
+	return now, nonce, sign
 }

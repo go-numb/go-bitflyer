@@ -76,6 +76,12 @@ func main() {
     "lightning_executions_FX_BTC_JPY",
   }
   channelsPrivate := []string{
+    // spot tickerを購読する理由
+    // - 受信待機時間が長くなる場合、設定したタイムアウト時間内に一度も受信しない可能性
+    // - bitflyer JSON-RPCにはpingによるpongがない
+    // - 受信しない場合タイムアウト設定を設けている
+    // 上記理由により、ticker配信にて受信Eventを行っている
+    "lightning_ticker_BTC_JPY",
     "child_order_events",
     "parent_order_events",
   }

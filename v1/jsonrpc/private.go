@@ -5,11 +5,29 @@ import (
 	"strings"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
+	"golang.org/x/sync/errgroup"
+
 	"github.com/buger/jsonparser"
 	"github.com/go-numb/go-bitflyer/auth"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 )
+
+type WsRequestForJSONRPC struct {
+	Jsonrpc string  `json:"jsonrpc"`
+	Method  string  `json:"method"`
+	Params  WsParam `json:"params"`
+	ID      int     `json:"id"`
+}
+
+type WsParam struct {
+	APIKey    string `json:"api_key"`
+	Timestamp int    `json:"timestamp"`
+	Nonce     string `json:"nonce"`
+	Signature string `json:"signature"`
+}
 
 type WsResponceForAuth struct {
 	Jsonrpc string `json:"jsonrpc"`
@@ -51,33 +69,132 @@ type WsResponceForParentEvent struct {
 func GetPrivate(key, secret string, channels []string, ch chan Response) {
 	conn, _, err := websocket.DefaultDialer.Dial(BASEURL, nil)
 	if err != nil {
-		panic(err)
+		ch <- Response{
+			Type:  Error,
+			Error: err,
+		}
+		return
 	}
 	defer conn.Close()
 
-	now, apiKey, nonce, sign := auth.WsParamForPrivate(key, secret)
-	req := fmt.Sprintf(`{"jsonrpc": "2.0", "method": "auth", "params": {"api_key": "%s", "timestamp": %d, "nonce": "%v", "signature": "%s"}, "id": %d}`, apiKey, now, nonce, sign, now)
-	fmt.Printf("%+v\n", req)
-	if err := conn.WriteMessage(websocket.TextMessage, []byte(req)); err != nil {
-		panic(err)
+	if err := subscriber(conn, key, secret); err != nil {
+		ch <- Response{
+			Type:  Error,
+			Error: err,
+		}
+		return
+	}
+
+	if err := writer(conn, channels); err != nil {
+		ch <- Response{
+			Type:  Error,
+			Error: err,
+		}
+		return
+	}
+
+	var eg errgroup.Group
+	eg.Go(func() error {
+		for {
+			conn.SetReadDeadline(time.Now().Add(HeartbeatIntervalSecond * 10 * time.Second))
+			_, msg, err := conn.ReadMessage()
+			if err != nil {
+				return errors.Wrap(err, "can't receive error: ")
+			}
+
+			name, err := jsonparser.GetString(msg, "params", "channel")
+			if err != nil {
+				continue
+			}
+			data, _, _, err := jsonparser.Get(msg, "params", "message")
+			if err != nil {
+				continue
+			}
+
+			switch name {
+			case "lightning_ticker_BTC_JPY":
+				// SetDeadLine回避捨てイベント
+			case "lightning_ticker_FX_BTC_JPY":
+				// SetDeadLine回避捨てイベント
+
+			case "child_order_events":
+				var child []WsResponceForChildEvent
+				json.Unmarshal(data, &child)
+				ch <- Response{
+					Type:        ChildOrders,
+					ChildOrders: child,
+				}
+
+			case "parent_order_events":
+				var parent []WsResponceForParentEvent
+				json.Unmarshal(data, &parent)
+				ch <- Response{
+					Type:         ParentOrders,
+					ParentOrders: parent,
+				}
+
+			default:
+				ch <- Response{
+					Type:  Error,
+					Error: errors.New("read type error at private channel: " + name),
+				}
+			}
+		}
+
+	})
+
+	if err := eg.Wait(); err != nil {
+		log.Error(err)
+		go func() {
+			ch <- Response{
+				Type:  Error,
+				Error: errors.New("websocket type error: " + err.Error()),
+			}
+		}()
+	}
+}
+
+func subscriber(conn *websocket.Conn, key, secret string) error {
+	now, nonce, sign := auth.WsParamForPrivate(secret)
+	req := &WsRequestForJSONRPC{
+		Jsonrpc: "2.0",
+		Method:  "auth",
+		Params: WsParam{
+			APIKey:    key,
+			Timestamp: now,
+			Nonce:     nonce,
+			Signature: sign,
+		},
+		ID: now,
+	}
+	fmt.Printf("subscribe request: %+v\n", req)
+
+	if err := conn.WriteJSON(req); err != nil {
+		return err
 	}
 
 	_, msg, err := conn.ReadMessage()
 	if err != nil {
-		panic(err)
+		return err
 	}
-	var check WsResponceForAuth
-	json.Unmarshal(msg, &check)
-
-	if !check.Result { // read channel return, if result  false
-		panic(err)
+	t, _ := jsonparser.GetBoolean(msg, "result")
+	if !t { // read channel return, if result  false
+		return err
 	}
-	fmt.Printf("private channel read success: %+v\n", check)
+	fmt.Printf("private channel connect success: %+v\n", t)
 
+	return nil
+}
+
+func writer(conn *websocket.Conn, channels []string) error {
 	var requests []string
 	for _, channel := range channels {
 		fmt.Println(channel)
 		switch {
+		case strings.HasPrefix(channel, "lightning_ticker_BTC_JPY"):
+			fmt.Println("type has lightning_ticker_BTC_JPY")
+		case strings.HasPrefix(channel, "lightning_ticker_FX_BTC_JPY"):
+			fmt.Println("type has lightning_ticker_FX_BTC_JPY")
 		case strings.HasPrefix(channel, "child_order_events"):
 			fmt.Println("type has child order")
 		case strings.HasPrefix(channel, "parent_order_events"):
@@ -86,56 +203,11 @@ func GetPrivate(key, secret string, channels []string, ch chan Response) {
 		requests = append(requests, fmt.Sprintf(`{"jsonrpc": "2.0", "method": "subscribe", "params": {"channel": "%s"}, "id": %d}`, channel, time.Now().UTC().Unix()))
 	}
 
-	if len(requests) == 2 {
-		fmt.Println("gets all private channels")
-	}
-
 	for _, v := range requests {
 		if err := conn.WriteMessage(websocket.TextMessage, []byte(v)); err != nil {
-			panic(err)
+			return err
 		}
 	}
 
-	for {
-		conn.SetReadDeadline(time.Now().Add(5 * time.Minute))
-		_, msg, err := conn.ReadMessage()
-		if err != nil {
-			goto EXIT
-		}
-
-		name, err := jsonparser.GetString(msg, "params", "channel")
-		if err != nil {
-			continue
-		}
-		data, _, _, err := jsonparser.Get(msg, "params", "message")
-		if err != nil {
-			continue
-		}
-
-		switch name {
-		case "child_order_events":
-			var child []WsResponceForChildEvent
-			json.Unmarshal(data, &child)
-			ch <- Response{
-				Type:        ChildOrders,
-				ChildOrders: child,
-			}
-
-		case "parent_order_events":
-			var parent []WsResponceForParentEvent
-			json.Unmarshal(data, &parent)
-			ch <- Response{
-				Type:         ParentOrders,
-				ParentOrders: parent,
-			}
-
-		default:
-			ch <- Response{
-				Type:  Error,
-				Error: errors.New("read type error at private channel: " + name),
-			}
-		}
-	}
-
-EXIT:
+	return nil
 }
