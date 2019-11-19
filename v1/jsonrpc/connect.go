@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gorilla/websocket"
+
 	"github.com/json-iterator/go"
 
 	"github.com/buger/jsonparser"
@@ -18,7 +20,6 @@ import (
 	"github.com/go-numb/go-bitflyer/v1/public/board"
 	"github.com/go-numb/go-bitflyer/v1/public/executions"
 	"github.com/go-numb/go-bitflyer/v1/public/ticker"
-	"golang.org/x/net/websocket"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
@@ -28,6 +29,8 @@ const (
 	Ticker
 	Executions
 	Board
+	ChildOrders
+	ParentOrders
 	Error
 
 	HeartbeatIntervalSecond time.Duration = 60
@@ -47,6 +50,9 @@ type Response struct {
 	Ticker     ticker.Response
 	Executions executions.Response
 	Orderbook  board.Response
+
+	ChildOrders  []WsResponceForChildEvent
+	ParentOrders []WsResponceForParentEvent
 }
 
 type ResponseTicker struct {
@@ -74,14 +80,15 @@ type ResponseBoard struct {
 	} `json:"params"`
 }
 
+// Get connect websocket, public channels
 func Get(channels []string, ch chan Response) {
-	ws, err := websocket.Dial(BASEURL, "", ORIGIN)
+	conn, _, err := websocket.DefaultDialer.Dial(BASEURL, nil)
 	if err != nil {
 		ch <- Response{
 			Error: errors.Wrap(err, "websocket connecting error: "),
 		}
 	}
-	defer ws.Close()
+	defer conn.Close()
 
 	var (
 		which Types
@@ -105,8 +112,8 @@ func Get(channels []string, ch chan Response) {
 		fmt.Printf("gets all channels %d\n", All)
 	}
 
-	for _, v := range requests {
-		if _, err := ws.Write([]byte(v)); err != nil {
+	for _, request := range requests {
+		if err := conn.WriteMessage(websocket.TextMessage, []byte(request)); err != nil {
 			ch <- Response{
 				Type:  Error,
 				Error: errors.Wrap(err, "websocket write error: "),
@@ -117,16 +124,16 @@ func Get(channels []string, ch chan Response) {
 	var eg errgroup.Group
 
 	eg.Go(func() error {
-		var msg = make([]byte, 512)
 		for {
-			ws.SetReadDeadline(time.Now().Add(ReadTimeoutSecond * time.Second))
-			if err = websocket.Message.Receive(ws, &msg); err != nil {
+			conn.SetReadDeadline(time.Now().Add(ReadTimeoutSecond * time.Second))
+			_, msg, err := conn.ReadMessage()
+			if err != nil {
 				return errors.Wrap(err, "can't receive error: ")
 			}
 
 			channelName, err := jsonparser.GetString(msg, "params", "channel")
 			if err != nil {
-				return errors.Wrap(err, "can't read channel name: ")
+				continue
 			}
 
 			switch {
@@ -175,6 +182,5 @@ func Get(channels []string, ch chan Response) {
 				Error: errors.New("websocket type error: " + err.Error()),
 			}
 		}()
-		ws.Close()
 	}
 }

@@ -4,6 +4,8 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
+	"math/rand"
 	"net/http"
 	"time"
 
@@ -50,4 +52,20 @@ func SetAuthHeaders(config *AuthConfig, api api.API, req api.Request) (*http.Hea
 	header.Set("ACCESS-SIGN", sign)
 
 	return &header, nil
+}
+
+// WsParamForPrivate return util for private websocket
+func WsParamForPrivate(key, sercret string) (now int, apikey, nonce, sign string) {
+	mac := hmac.New(sha256.New, []byte(sercret))
+
+	t := time.Now().UTC()
+	rand.Seed(t.UnixNano())
+
+	now = int(t.Unix())
+	nonce = fmt.Sprintf("%d", rand.Int())
+
+	mac.Write([]byte(fmt.Sprintf("%d%s", now, nonce)))
+
+	sign = hex.EncodeToString(mac.Sum(nil))
+	return now, key, nonce, sign
 }

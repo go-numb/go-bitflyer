@@ -18,6 +18,7 @@ go-bitflyer is wrapper for Crypto Trading [bitFlyer Lightning API](https://light
 - Order's special
 - API Limit from headers
 - API data cached
+- Websocket for private(child/parent orders)
 
 ## Usage
 
@@ -72,9 +73,14 @@ func main() {
 	channels := []string{
 		"lightning_board_FX_BTC_JPY",
 		"lightning_ticker_FX_BTC_JPY",
-		"lightning_executions_FX_BTC_JPY",
-	}
-	go jsonrpc.Get(channels, ch)
+    "lightning_executions_FX_BTC_JPY",
+  }
+  channelsPrivate := []string{
+    "child_order_events",
+    "parent_order_events",
+  }
+  go jsonrpc.Get(channels, ch)
+  go jsonrpc.GetPrivate(<KEY>, <SECRET>, channelsPrivate, ch)
 
 	eg.Go(func() error {
 		for {
@@ -90,6 +96,15 @@ func main() {
 
 				case jsonrpc.Orderbook:
           // log.Infof("board: %+v", v.Orderbook)
+
+        /*
+          # Private channels
+        */
+				case jsonrpc.ChildOrders:
+          // log.Infof("child orders: %+v", v.ChildOrders)
+
+				case jsonrpc.ParentOrders:
+          // log.Infof("parent orders: %+v", v.ParentOrders)
           
         case jsonrpc.Error:
           // do something()
