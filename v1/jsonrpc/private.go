@@ -167,7 +167,6 @@ func subscriber(conn *websocket.Conn, key, secret string) error {
 		},
 		ID: now,
 	}
-	fmt.Printf("subscribe request: %+v\n", req)
 
 	if err := conn.WriteJSON(req); err != nil {
 		return err

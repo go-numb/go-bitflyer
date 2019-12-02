@@ -141,7 +141,7 @@ func (p *Limit) FromHeader(h http.Header) {
 		t := h.Get("X-Orderrequest-Ratelimit-Reset") // リセットUTC時間(sec未満なし)
 		if t != "" {
 			reset, _ := strconv.ParseInt(t, 10, 64)
-			p.toTime(reset)
+			p.ResetForOrder = toTime(reset)
 		}
 	}()
 	wg.Add(1)
@@ -158,7 +158,7 @@ func (p *Limit) FromHeader(h http.Header) {
 		t := h.Get("X-Ratelimit-Reset") // リセットUTC時間(sec未満なし)
 		if t != "" {
 			reset, _ := strconv.ParseInt(t, 10, 64)
-			p.toTime(reset)
+			p.Reset = toTime(reset)
 		}
 	}()
 
@@ -193,6 +193,6 @@ func (p *Limit) CheckForOrder() error {
 }
 
 // int64 to time.Time
-func (p *Limit) toTime(t int64) {
-	p.Reset = time.Unix(t, 10)
+func toTime(t int64) time.Time {
+	return time.Unix(t, 10)
 }
