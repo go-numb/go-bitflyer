@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/pkg/errors"
@@ -26,8 +27,9 @@ const (
 	IOC = "IOC"
 	FOK = "FOK"
 
-	APIREMAIN  = 500
-	TIMELAYOUT = "20060102.150405.999999999"
+	APIREMAIN         = 500
+	APIREMAINFORORDER = 300
+	TIMELAYOUT        = "20060102.150405.999999999"
 )
 
 func ToType(isMarket bool) string {
@@ -101,10 +103,14 @@ func (p *APIHeaders) IsCache(h http.Header) bool {
 	return false
 }
 
+// Limit is API Limit, ForOrder is Order(child/parent), CancelAll
 type Limit struct {
-	Period int       // Period is リセットまでの秒数
-	Remain int       // Remain is 残Requests
-	Reset  time.Time // Reset Remainの詳細時間(sec未満なし)
+	Period         int       // Period is リセットまでの秒数
+	PeriodForOrder int       // Period is リセットまでの秒数
+	Remain         int       // Remain is 残Requests
+	RemainForOrder int       // Remain is 残Requests
+	Reset          time.Time // Reset Remainの詳細時間(sec未満なし)
+	ResetForOrder  time.Time // Reset Remainの詳細時間(sec未満なし)
 }
 
 func NewLimit(isPrivate bool) *Limit {
@@ -113,31 +119,62 @@ func NewLimit(isPrivate bool) *Limit {
 			Period: 0,
 			Remain: APIREMAIN,
 			Reset:  time.Now().Add(5 * time.Minute),
+
+			PeriodForOrder: 0,
+			RemainForOrder: APIREMAINFORORDER,
+			ResetForOrder:  time.Now().Add(5 * time.Minute),
 		}
 	}
 
 	return &Limit{
-		Period: 0,
-		Remain: APIREMAIN,
-		Reset:  time.Now().Add(5 * time.Minute),
+		Period:         0,
+		Remain:         APIREMAIN,
+		Reset:          time.Now().Add(5 * time.Minute),
+		PeriodForOrder: 0,
+		RemainForOrder: APIREMAINFORORDER,
+		ResetForOrder:  time.Now().Add(5 * time.Minute),
 	}
 }
 
 // FromHeader X-xxxからLimitを取得
 func (p *Limit) FromHeader(h http.Header) {
-	period := h.Get("X-Ratelimit-Period") // リセットまでの残秒数
-	if period != "" {
-		p.Period, _ = strconv.Atoi(period)
-	}
-	remain := h.Get("X-Ratelimit-Remaining") // 残回数
-	if remain != "" {
-		p.Remain, _ = strconv.Atoi(remain)
-	}
-	t := h.Get("X-Ratelimit-Reset") // リセットUTC時間(sec未満なし)
-	if t != "" {
-		reset, _ := strconv.ParseInt(t, 10, 64)
-		p.toTime(reset)
-	}
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		period := h.Get("X-Orderrequest-Ratelimit-Period") // リセットまでの残秒数
+		if period != "" {
+			p.PeriodForOrder, _ = strconv.Atoi(period)
+		}
+		remain := h.Get("X-Orderrequest-Ratelimit-Remaining") // 残回数
+		if remain != "" {
+			p.RemainForOrder, _ = strconv.Atoi(remain)
+		}
+		t := h.Get("X-Orderrequest-Ratelimit-Reset") // リセットUTC時間(sec未満なし)
+		if t != "" {
+			reset, _ := strconv.ParseInt(t, 10, 64)
+			p.toTime(reset)
+		}
+		wg.Done()
+	}()
+	wg.Add(1)
+	go func() {
+		period := h.Get("X-Ratelimit-Period") // リセットまでの残秒数
+		if period != "" {
+			p.Period, _ = strconv.Atoi(period)
+		}
+		remain := h.Get("X-Ratelimit-Remaining") // 残回数
+		if remain != "" {
+			p.Remain, _ = strconv.Atoi(remain)
+		}
+		t := h.Get("X-Ratelimit-Reset") // リセットUTC時間(sec未満なし)
+		if t != "" {
+			reset, _ := strconv.ParseInt(t, 10, 64)
+			p.toTime(reset)
+		}
+		wg.Done()
+	}()
+
+	wg.Wait()
 }
 
 func (p *Limit) Check() error {
