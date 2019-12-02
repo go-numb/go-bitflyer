@@ -98,6 +98,11 @@ func (p *client) Request(api api.API, req api.Request, result interface{}) (*htt
 	Vary:[Accept-Encoding]
 	X-Content-Type-Options:[nosniff]
 	X-Frame-Options:[sameorigin]
+
+	// API LIMIT
+	X-Orderrequest-Ratelimit-Period:[228]
+	X-Orderrequest-Ratelimit-Remaining:[288]
+	X-Orderrequest-Ratelimit-Reset:[1575269062]
 	X-Ratelimit-Period:[153]  ********* API Limit 解消までの秒数
 	X-Ratelimit-Remaining:[494]  ********* API Limit 回数
 	X-Ratelimit-Reset:[1566997170] ********* API Limit リセット時間UTC(sec未満なし)
