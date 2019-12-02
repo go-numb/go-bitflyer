@@ -113,19 +113,7 @@ type Limit struct {
 	ResetForOrder  time.Time // Reset Remainの詳細時間(sec未満なし)
 }
 
-func NewLimit(isPrivate bool) *Limit {
-	if isPrivate {
-		return &Limit{
-			Period: 0,
-			Remain: APIREMAIN,
-			Reset:  time.Now().Add(5 * time.Minute),
-
-			PeriodForOrder: 0,
-			RemainForOrder: APIREMAINFORORDER,
-			ResetForOrder:  time.Now().Add(5 * time.Minute),
-		}
-	}
-
+func NewLimit() *Limit {
 	return &Limit{
 		Period:         0,
 		Remain:         APIREMAIN,
@@ -141,6 +129,7 @@ func (p *Limit) FromHeader(h http.Header) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		period := h.Get("X-Orderrequest-Ratelimit-Period") // リセットまでの残秒数
 		if period != "" {
 			p.PeriodForOrder, _ = strconv.Atoi(period)
@@ -154,10 +143,10 @@ func (p *Limit) FromHeader(h http.Header) {
 			reset, _ := strconv.ParseInt(t, 10, 64)
 			p.toTime(reset)
 		}
-		wg.Done()
 	}()
 	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		period := h.Get("X-Ratelimit-Period") // リセットまでの残秒数
 		if period != "" {
 			p.Period, _ = strconv.Atoi(period)
@@ -171,7 +160,6 @@ func (p *Limit) FromHeader(h http.Header) {
 			reset, _ := strconv.ParseInt(t, 10, 64)
 			p.toTime(reset)
 		}
-		wg.Done()
 	}()
 
 	wg.Wait()
