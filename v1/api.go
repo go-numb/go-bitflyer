@@ -190,6 +190,20 @@ func (p *Limit) Check() error {
 	return nil
 }
 
+// CheckForOrder is check API limit for Order method
+func (p *Limit) CheckForOrder() error {
+	if p.RemainForOrder <= 1 { // 急変時、bitflyer APIがRemain回復しない調整を行う場合、Remain:1が返ってくるため
+		if time.Now().After(p.ResetForOrder) { // APIRESET時間を過ぎていたらRemainを補充
+			p.RemainForOrder = APIREMAINFORORDER
+		}
+		return fmt.Errorf("api limit, has API Limit Remain:%d, Reset time: %s(%s)",
+			p.RemainForOrder,
+			p.ResetForOrder.Format("15:04:05"),
+			time.Now().Format("15:04:05"))
+	}
+	return nil
+}
+
 // int64 to time.Time
 func (p *Limit) toTime(t int64) {
 	p.Reset = time.Unix(t, 10)
