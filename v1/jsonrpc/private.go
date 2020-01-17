@@ -36,16 +36,23 @@ type WsResponceForAuth struct {
 }
 
 type WsResponceForChildEvent struct {
-	ProductCode            string    `json:"product_code"`
-	ChildOrderID           string    `json:"child_order_id"`
-	ChildOrderAcceptanceID string    `json:"child_order_acceptance_id"`
-	EventDate              time.Time `json:"event_date"`
-	EventType              string    `json:"event_type"`
-	ChildOrderType         string    `json:"child_order_type"`
-	Side                   string    `json:"side"`
-	Price                  int       `json:"price"`
-	Size                   float64   `json:"size"`
-	ExpireDate             string    `json:"expire_date"`
+	ExecID                 int    `json:"exec_id"`
+	ProductCode            string `json:"product_code"`
+	ChildOrderID           string `json:"child_order_id"`
+	ChildOrderAcceptanceID string `json:"child_order_acceptance_id"`
+	ChildOrderType         string `json:"child_order_type"`
+
+	EventDate  time.Time `json:"event_date"`
+	EventType  string    `json:"event_type"`
+	Side       string    `json:"side"`
+	Price      int       `json:"price"`
+	Size       float64   `json:"size"`
+	ExpireDate string    `json:"expire_date"`
+
+	// 新設分追記
+	Reason     string  `json:"reason"`
+	Commission float64 `json:"commission"`
+	SFD        float64 `json:"sfd"`
 }
 
 type WsResponceForParentEvent struct {
