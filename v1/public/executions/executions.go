@@ -1,17 +1,18 @@
 package executions
 
 import (
+	"fmt"
 	"net/http"
+	"reflect"
 
 	"github.com/go-numb/go-bitflyer/v1/time"
 	"github.com/go-numb/go-bitflyer/v1/types"
-	"github.com/google/go-querystring/query"
 )
 
 type Request struct {
 	ProductCode types.ProductCode `json:"product_code" url:"product_code"`
 
-	Pagination types.Pagination `json:",inline"`
+	Pagination types.Pagination `json:",inline" url:",inline"`
 }
 
 type Response []Execution
@@ -35,8 +36,20 @@ func (req *Request) Method() string {
 }
 
 func (req *Request) Query() string {
-	values, _ := query.Values(req)
-	return values.Encode()
+	// values, _ := query.Values(req)
+	q := "product_code=" + string(req.ProductCode)
+	if !reflect.DeepEqual(req.Pagination, types.Pagination{}) {
+		if req.Pagination.Count != 0 {
+			q += fmt.Sprintf("&count=%d", req.Pagination.Count)
+		}
+		if req.Pagination.Before != 0 {
+			q += fmt.Sprintf("&before=%d", req.Pagination.Before)
+		}
+		if req.Pagination.After != 0 {
+			q += fmt.Sprintf("&after=%d", req.Pagination.After)
+		}
+	}
+	return q
 }
 
 func (req *Request) Payload() []byte {
