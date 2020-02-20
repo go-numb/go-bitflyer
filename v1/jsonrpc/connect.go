@@ -7,7 +7,7 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 
 	"github.com/buger/jsonparser"
 
@@ -51,8 +51,8 @@ type Response struct {
 	Executions executions.Response
 	Orderbook  board.Response
 
-	ChildOrders  []WsResponceForChildEvent
-	ParentOrders []WsResponceForParentEvent
+	ChildOrders  []WsResponseForChildEvent
+	ParentOrders []WsResponseForParentEvent
 }
 
 type ResponseTicker struct {

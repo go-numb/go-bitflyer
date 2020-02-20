@@ -30,13 +30,28 @@ type WsParam struct {
 	Signature string `json:"signature"`
 }
 
-type WsResponceForAuth struct {
+type WsResponseForAuth struct {
 	Jsonrpc string `json:"jsonrpc"`
 	ID      int    `json:"id"`
 	Result  bool   `json:"result"`
 }
 
-type WsResponceForChildEvent struct {
+type WSResponseForTicker struct {
+	ProductCode     string    `json:"product_code"`
+	Timestamp       time.Time `json:"timestamp"`
+	TickID          int       `json:"tick_id"`
+	BestBid         float64   `json:"best_bid"`
+	BestAsk         float64   `json:"best_ask"`
+	BestBidSize     float64   `json:"best_bid_size"`
+	BestAskSize     float64   `json:"best_ask_size"`
+	TotalBidDepth   float64   `json:"total_bid_depth"`
+	TotalAskDepth   float64   `json:"total_ask_depth"`
+	Ltp             float64   `json:"ltp"`
+	Volume          float64   `json:"volume"`
+	VolumeByProduct float64   `json:"volume_by_product"`
+}
+
+type WsResponseForChildEvent struct {
 	ExecID                 int    `json:"exec_id"`
 	ProductCode            string `json:"product_code"`
 	ChildOrderID           string `json:"child_order_id"`
@@ -56,7 +71,7 @@ type WsResponceForChildEvent struct {
 	SFD        float64 `json:"sfd"`
 }
 
-type WsResponceForParentEvent struct {
+type WsResponseForParentEvent struct {
 	ProductCode             string    `json:"product_code"`
 	ParentOrderID           string    `json:"parent_order_id"`
 	ParentOrderAcceptanceID string    `json:"parent_order_acceptance_id"`
@@ -121,6 +136,7 @@ func GetPrivate(key, secret string, channels []string, ch chan Response) {
 
 			switch name {
 			case "lightning_ticker_BTC_JPY":
+				fmt.Printf("%+v\n", string(data))
 				// SetDeadLine回避捨てイベント
 				var parent ticker.Response
 				json.Unmarshal(data, &parent)
@@ -139,7 +155,7 @@ func GetPrivate(key, secret string, channels []string, ch chan Response) {
 				}
 
 			case "child_order_events":
-				var child []WsResponceForChildEvent
+				var child []WsResponseForChildEvent
 				json.Unmarshal(data, &child)
 				ch <- Response{
 					Type:        ChildOrders,
@@ -147,7 +163,7 @@ func GetPrivate(key, secret string, channels []string, ch chan Response) {
 				}
 
 			case "parent_order_events":
-				var parent []WsResponceForParentEvent
+				var parent []WsResponseForParentEvent
 				json.Unmarshal(data, &parent)
 				ch <- Response{
 					Type:         ParentOrders,
