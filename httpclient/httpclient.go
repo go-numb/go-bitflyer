@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-numb/go-bitflyer"
+	api "github.com/go-numb/go-bitflyer"
 	"github.com/go-numb/go-bitflyer/auth"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/pkg/errors"

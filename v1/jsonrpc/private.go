@@ -11,6 +11,7 @@ import (
 
 	"github.com/buger/jsonparser"
 	"github.com/go-numb/go-bitflyer/auth"
+	"github.com/go-numb/go-bitflyer/v1/public/ticker"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 )
@@ -121,8 +122,21 @@ func GetPrivate(key, secret string, channels []string, ch chan Response) {
 			switch name {
 			case "lightning_ticker_BTC_JPY":
 				// SetDeadLine回避捨てイベント
+				var parent ticker.Response
+				json.Unmarshal(data, &parent)
+				ch <- Response{
+					Type:   Ticker,
+					Ticker: parent,
+				}
+
 			case "lightning_ticker_FX_BTC_JPY":
 				// SetDeadLine回避捨てイベント
+				var parent ticker.Response
+				json.Unmarshal(data, &parent)
+				ch <- Response{
+					Type:   Ticker,
+					Ticker: parent,
+				}
 
 			case "child_order_events":
 				var child []WsResponceForChildEvent
