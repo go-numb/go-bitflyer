@@ -136,7 +136,7 @@ func GetPrivate(key, secret string, channels []string, ch chan Response) {
 
 			switch name {
 			case "lightning_ticker_BTC_JPY":
-				fmt.Printf("%+v\n", string(data))
+				// fmt.Printf("%+v\n", string(data))
 				// SetDeadLine回避捨てイベント
 				var parent ticker.Response
 				json.Unmarshal(data, &parent)
