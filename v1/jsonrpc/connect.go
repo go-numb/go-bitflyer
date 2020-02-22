@@ -96,24 +96,20 @@ func Get(channels []string, ch chan Response) {
 		requests []string
 	)
 
-	for _, channel := range channels {
+	for i := range channels {
 		switch {
-		case strings.HasPrefix(channel, "lightning_ticker"):
+		case strings.HasPrefix(channels[i], "lightning_ticker"):
 			fmt.Printf("type has %d\n", Ticker)
-		case strings.HasPrefix(channel, "lightning_executions"):
+		case strings.HasPrefix(channels[i], "lightning_executions"):
 			fmt.Printf("type has %d\n", Executions)
-		case strings.HasPrefix(channel, "lightning_board"):
+		case strings.HasPrefix(channels[i], "lightning_board"):
 			fmt.Printf("type has %d\n", Board)
 		}
-		requests = append(requests, fmt.Sprintf(`{"method": "subscribe", "params": {"channel": "%s"}}`, channel))
+		requests = append(requests, fmt.Sprintf(`{"method": "subscribe", "params": {"channels[%d]": "%s"}}`, i, channels[i]))
 	}
 
-	if len(requests) == 4 {
-		fmt.Printf("gets all channels %d\n", All)
-	}
-
-	for _, request := range requests {
-		if err := conn.WriteMessage(websocket.TextMessage, []byte(request)); err != nil {
+	for i := range requests {
+		if err := conn.WriteMessage(websocket.TextMessage, []byte(requests[i])); err != nil {
 			ch <- Response{
 				Type:  Error,
 				Error: errors.Wrap(err, "websocket write error: "),
@@ -165,13 +161,9 @@ func Get(channels []string, ch chan Response) {
 				}
 
 			default:
-				ch <- Response{
-					Type:  Error,
-					Error: errors.New("read type error: " + string(which)),
-				}
+				return errors.New("read type error: " + string(which))
 			}
 		}
-		return errors.New("websocket read has error")
 	})
 
 	if err := eg.Wait(); err != nil {
@@ -179,7 +171,7 @@ func Get(channels []string, ch chan Response) {
 		go func() {
 			ch <- Response{
 				Type:  Error,
-				Error: errors.New("websocket type error: " + err.Error()),
+				Error: errors.New("websocket error: " + err.Error()),
 			}
 		}()
 	}
