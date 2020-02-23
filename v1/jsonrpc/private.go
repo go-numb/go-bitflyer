@@ -135,23 +135,14 @@ func GetPrivate(key, secret string, channels []string, ch chan Response) {
 			}
 
 			switch name {
-			case "lightning_ticker_BTC_JPY":
+			case "lightning_ticker_BTC_JPY", "lightning_ticker_FX_BTC_JPY":
 				// fmt.Printf("%+v\n", string(data))
 				// SetDeadLine回避捨てイベント
-				var parent ticker.Response
-				json.Unmarshal(data, &parent)
+				var ticker ticker.Response
+				json.Unmarshal(data, &ticker)
 				ch <- Response{
 					Type:   Ticker,
-					Ticker: parent,
-				}
-
-			case "lightning_ticker_FX_BTC_JPY":
-				// SetDeadLine回避捨てイベント
-				var parent ticker.Response
-				json.Unmarshal(data, &parent)
-				ch <- Response{
-					Type:   Ticker,
-					Ticker: parent,
+					Ticker: ticker,
 				}
 
 			case "child_order_events":
