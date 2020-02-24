@@ -120,8 +120,8 @@ func Get(channels []string, ch chan Response) {
 	var eg errgroup.Group
 
 	eg.Go(func() error {
-		conn.SetReadDeadline(time.Now().Add(ReadTimeoutSecond * time.Second))
 		for {
+			conn.SetReadDeadline(time.Now().Add(ReadTimeoutSecond * time.Second))
 			_, msg, err := conn.ReadMessage()
 			if err != nil {
 				return errors.Wrap(err, "can't receive error: ")
