@@ -105,7 +105,7 @@ func Get(channels []string, ch chan Response) {
 		case strings.HasPrefix(channels[i], "lightning_board"):
 			fmt.Printf("type has %d\n", Board)
 		}
-		requests = append(requests, fmt.Sprintf(`{"method": "subscribe", "params": {"channels[%d]": "%s"}}`, i, channels[i]))
+		requests = append(requests, fmt.Sprintf(`{"method": "subscribe", "params": {"channel": "%s"}}`, channels[i]))
 	}
 
 	for i := range requests {
@@ -120,8 +120,8 @@ func Get(channels []string, ch chan Response) {
 	var eg errgroup.Group
 
 	eg.Go(func() error {
+		conn.SetReadDeadline(time.Now().Add(ReadTimeoutSecond * time.Second))
 		for {
-			conn.SetReadDeadline(time.Now().Add(ReadTimeoutSecond * time.Second))
 			_, msg, err := conn.ReadMessage()
 			if err != nil {
 				return errors.Wrap(err, "can't receive error: ")
