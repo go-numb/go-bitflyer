@@ -80,6 +80,13 @@ type ResponseBoard struct {
 	} `json:"params"`
 }
 
+func Unsubscribe(conn *websocket.Conn, channels []string) {
+	for i := range channels {
+		conn.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf(`{"method": "unsubscribe", "params": {"channel": "%s"}}`, channels[i])))
+		time.Sleep(time.Second)
+	}
+}
+
 // Get connect websocket, public channels
 func Get(channels []string, ch chan Response) {
 	conn, _, err := websocket.DefaultDialer.Dial(BASEURL, nil)
@@ -88,6 +95,7 @@ func Get(channels []string, ch chan Response) {
 			Error: errors.Wrap(err, "websocket connecting error: "),
 		}
 	}
+	defer Unsubscribe(conn, channels)
 	defer conn.Close()
 
 	var (

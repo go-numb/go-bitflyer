@@ -98,6 +98,7 @@ func GetPrivate(key, secret string, channels []string, ch chan Response) {
 		}
 		return
 	}
+	defer Unsubscribe(conn, channels)
 	defer conn.Close()
 
 	if err := subscriber(conn, key, secret); err != nil {
@@ -215,23 +216,23 @@ func subscriber(conn *websocket.Conn, key, secret string) error {
 
 func writer(conn *websocket.Conn, channels []string) error {
 	var requests []string
-	for _, channel := range channels {
-		fmt.Println(channel)
+	for i := range channels {
+		fmt.Println(channels[i])
 		switch {
-		case strings.HasPrefix(channel, "lightning_ticker_BTC_JPY"):
+		case strings.HasPrefix(channels[i], "lightning_ticker_BTC_JPY"):
 			fmt.Println("type has lightning_ticker_BTC_JPY")
-		case strings.HasPrefix(channel, "lightning_ticker_FX_BTC_JPY"):
+		case strings.HasPrefix(channels[i], "lightning_ticker_FX_BTC_JPY"):
 			fmt.Println("type has lightning_ticker_FX_BTC_JPY")
-		case strings.HasPrefix(channel, "child_order_events"):
+		case strings.HasPrefix(channels[i], "child_order_events"):
 			fmt.Println("type has child order")
-		case strings.HasPrefix(channel, "parent_order_events"):
+		case strings.HasPrefix(channels[i], "parent_order_events"):
 			fmt.Println("type has parent order")
 		}
-		requests = append(requests, fmt.Sprintf(`{"jsonrpc": "2.0", "method": "subscribe", "params": {"channel": "%s"}, "id": %d}`, channel, time.Now().UTC().Unix()))
+		requests = append(requests, fmt.Sprintf(`{"jsonrpc": "2.0", "method": "subscribe", "params": {"channel": "%s"}, "id": %d}`, channels[i], time.Now().UTC().Unix()))
 	}
 
-	for _, v := range requests {
-		if err := conn.WriteMessage(websocket.TextMessage, []byte(v)); err != nil {
+	for i := range requests {
+		if err := conn.WriteMessage(websocket.TextMessage, []byte(requests[i])); err != nil {
 			return err
 		}
 	}
