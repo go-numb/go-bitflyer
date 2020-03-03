@@ -19,6 +19,7 @@ go-bitflyer is wrapper for Crypto Trading [bitFlyer Lightning API](https://light
 - API Limit from headers
 - API data cached
 - Websocket for private(child/parent orders)
+- Performance tuned
 
 ## Usage
 
@@ -66,65 +67,60 @@ func main() {
 import	"github.com/go-numb/go-bitflyer/v1/jsonrpc"
 
 func main() {
-  dataStruct := struct{}
+  done := make(chen struct{})
 
-  // Websocket JsonRPC
-	ch := make(chan jsonrpc.Response)
-	channels := []string{
-		"lightning_board_FX_BTC_JPY",
-		"lightning_ticker_FX_BTC_JPY",
-    "lightning_executions_FX_BTC_JPY",
-  }
-  channelsPrivate := []string{
-    // spot tickerを購読する理由
-    // - 受信待機時間が長くなる場合、設定したタイムアウト時間内に一度も受信しない可能性
-    // - bitflyer JSON-RPCにはpingによるpongがない
-    // - 受信しない場合タイムアウト設定を設けている
-    // 上記理由により、ticker配信にて受信Eventを行っている
-    "lightning_ticker_BTC_JPY",
-    "child_order_events",
-    "parent_order_events",
-  }
-  go jsonrpc.Get(channels, ch)
-  go jsonrpc.GetPrivate(<KEY>, <SECRET>, channelsPrivate, ch)
+  recieve := make(chan WsWriter)
+	ctx, cancel := context.WithCancel(context.Background())
 
-	eg.Go(func() error {
+  go jsonrpc.Connect(ctx, recieve, []string{
+		"lightning_board_snapshot",
+		"lightning_board",
+		"lightning_ticker",
+		"lightning_executions",
+	}, []string{
+		string(types.FXBTCJPY),
+		string(types.BTCJPY),
+		string(types.ETHJPY),
+  })
+  
+  go jsonrpc.ConnectForPrivate(ctx, recieve, <API_KEY>, <API_SECRET>, []string{
+		"child_order_events",
+		"parent_order_events",
+	})
+
+	go func() {
 		for {
 			select {
-			case v := <-ch: // read websocket
-				switch v.Type {
-				case jsonrpc.Ticker:
-					// log.Infof("ticker: %+v", v.Ticker)
-					dataStruct.Ticker.Price = v.Ticker.LTP
+			case v := <-recieve:
+				switch v.Types {
+				case Board:
+					fmt.Printf("%s - %+v\n", v.ProductCode, v.Board)
+				case Ticker:
+					fmt.Printf("%s - %+v\n", v.ProductCode, v.Ticker)
+				case Executions:
+					fmt.Printf("%s - %+v\n", v.ProductCode, v.Executions)
 
-				case jsonrpc.Executions:
-					// log.Infof("exec: %+v", v.Executions)
+				case ChildOrders:
+					fmt.Printf("%+v\n", v.ChildOrderEvent)
+				case ParentOrders:
+					fmt.Printf("%+v\n", v.ParentOrderEvent)
 
-				case jsonrpc.Orderbook:
-          // log.Infof("board: %+v", v.Orderbook)
+				case Undefined:
+					fmt.Printf("undefined: %s - %+v\n", v.ProductCode, v.Results)
+				case Error:
+					fmt.Printf("error: %s - %+v\n", v.ProductCode, v.Results)
 
-        /*
-          # Private channels
-        */
-				case jsonrpc.ChildOrders:
-          // log.Infof("child orders: %+v", v.ChildOrders)
+				}
+			}
 
-				case jsonrpc.ParentOrders:
-          // log.Infof("parent orders: %+v", v.ParentOrders)
-          
-        case jsonrpc.Error:
-          // do something()
+			select {
+			case <-ctx.Done():
+				return
+			default:
+			}
+		}()
 
-        default:
-
-        }
-      }
-    }
-  )}
-
-  if eg.Wait();err != nil {
-    log.Error(err)
-  }
+  <-done
 }
 ```
 

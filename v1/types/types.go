@@ -13,6 +13,7 @@ const (
 	// BTCFUTURE1 = "BTCJPY27SEP2019"
 	// BTCFUTURE2 = "BTCJPY30AUG2019"
 	// BTCFUTUREx = "BTCJPY06SEP2019"
+	UNDEFINED ProductCode = "undefined"
 )
 
 type Pagination struct {
