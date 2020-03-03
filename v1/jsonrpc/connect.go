@@ -1,6 +1,7 @@
 package jsonrpc
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -88,7 +89,7 @@ func Unsubscribe(conn *websocket.Conn, channels []string) {
 }
 
 // Get connect websocket, public channels
-func Get(channels []string, ch chan Response) {
+func Get(ctx context.Context, channels []string, ch chan Response) {
 	conn, _, err := websocket.DefaultDialer.Dial(BASEURL, nil)
 	if err != nil {
 		ch <- Response{
@@ -170,6 +171,12 @@ func Get(channels []string, ch chan Response) {
 
 			default:
 				return errors.New("read type error: " + string(which))
+			}
+
+			select { // 待機させない
+			case <-ctx.Done():
+				return fmt.Errorf("stoped from outside, %s", ctx.Err().Error())
+			default:
 			}
 		}
 	})

@@ -1,6 +1,7 @@
 package jsonrpc
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -89,7 +90,7 @@ type WsResponseForParentEvent struct {
 }
 
 // GetPrivate is connect websocket, private channels
-func GetPrivate(key, secret string, channels []string, ch chan Response) {
+func GetPrivate(ctx context.Context, key, secret string, channels []string, ch chan Response) {
 	conn, _, err := websocket.DefaultDialer.Dial(BASEURL, nil)
 	if err != nil {
 		ch <- Response{
@@ -167,6 +168,12 @@ func GetPrivate(key, secret string, channels []string, ch chan Response) {
 					Type:  Error,
 					Error: errors.New("read type error at private channel: " + name),
 				}
+			}
+
+			select { // 待機させない
+			case <-ctx.Done():
+				return fmt.Errorf("stoped from outside, %s", ctx.Err().Error())
+			default:
 			}
 		}
 
