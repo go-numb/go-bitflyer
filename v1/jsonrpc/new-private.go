@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/go-numb/go-bitflyer/auth"
+	"github.com/go-numb/go-bitflyer/v1/types"
 	"github.com/sirupsen/logrus"
 
 	"github.com/buger/jsonparser"
@@ -130,6 +131,22 @@ RECONNECT:
 				w.Types = Ticker
 				if err := json.Unmarshal(data, &w.Ticker); err != nil {
 					continue
+				}
+
+				switch { // switch with ProductCode
+				case strings.HasSuffix(name, string(types.FXBTCJPY)):
+					w.ProductCode = types.FXBTCJPY
+
+				case strings.HasSuffix(name, string(types.BTCJPY)):
+					w.ProductCode = types.BTCJPY
+
+				case strings.HasSuffix(name, string(types.ETHJPY)):
+					w.ProductCode = types.ETHJPY
+
+				case strings.HasSuffix(name, string(types.ETHBTC)):
+					w.ProductCode = types.ETHBTC
+				default:
+					w.ProductCode = types.UNDEFINED
 				}
 
 			case strings.HasPrefix(name, "child_order_events"):

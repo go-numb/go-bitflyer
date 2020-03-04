@@ -188,7 +188,7 @@ RECONNECT:
 			case strings.HasSuffix(name, string(types.ETHJPY)):
 				w.ProductCode = types.ETHJPY
 
-			case strings.HasSuffix(name, string(types.ETHJPY)):
+			case strings.HasSuffix(name, string(types.ETHBTC)):
 				w.ProductCode = types.ETHBTC
 			default:
 				w.ProductCode = types.UNDEFINED
