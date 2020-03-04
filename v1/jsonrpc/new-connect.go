@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/labstack/gommon/log"
+	"github.com/sirupsen/logrus"
 
 	"github.com/go-numb/go-bitflyer/v1/public/board"
 	"github.com/go-numb/go-bitflyer/v1/public/executions"
@@ -109,7 +109,11 @@ type WsWriter struct {
 	Results error
 }
 
-func Connect(ctx context.Context, ch chan WsWriter, channels, symbols []string) {
+func Connect(ctx context.Context, ch chan WsWriter, channels, symbols []string, log *logrus.Logger) {
+	if log == nil {
+		log = logrus.New()
+	}
+
 RECONNECT:
 	conn, _, err := websocket.DefaultDialer.Dial(USE1, nil)
 	if err != nil {
@@ -200,19 +204,43 @@ RECONNECT:
 		}
 	})
 
-	var isFinished bool
 	if err := eg.Wait(); err != nil {
-		if strings.Contains(err.Error(), "context canceled") {
-			isFinished = true
-		}
 		log.Errorf("%v", err)
+
+		// 外部からのキャンセル
+		if strings.Contains(err.Error(), context.Canceled.Error()) {
+			// defer close()/unsubscribe()
+			return
+		}
 	}
 
 	// 明示的 Unsubscribed
 	// context.cancel()された場合は
 	unsubscribe(conn, requests)
 
-	if !isFinished {
-		goto RECONNECT
+	// Maintenanceならば待機
+	// Maintenanceでなければ、即再接続
+	if isMentenance() {
+		for {
+			if !isMentenance() {
+				break
+			}
+			time.Sleep(time.Second)
+		}
 	}
+
+	goto RECONNECT
+}
+
+func isMentenance() bool {
+	// ServerTimeを考慮し、UTC基準に
+	hour := time.Now().UTC().Hour()
+	if hour != 19 {
+		return false
+	}
+
+	if 12 < time.Now().Minute() { // メンテナンス以外
+		return false
+	}
+	return true
 }

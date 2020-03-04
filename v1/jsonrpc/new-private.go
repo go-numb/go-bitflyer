@@ -7,8 +7,7 @@ import (
 	"time"
 
 	"github.com/go-numb/go-bitflyer/auth"
-
-	"github.com/labstack/gommon/log"
+	"github.com/sirupsen/logrus"
 
 	"github.com/buger/jsonparser"
 	"github.com/gorilla/websocket"
@@ -83,7 +82,11 @@ type WsParentEvent struct {
 	ChildOrderAcceptanceID  string    `json:"child_order_acceptance_id"`
 }
 
-func ConnectForPrivate(ctx context.Context, ch chan WsWriter, key, secret string, channels []string) {
+func ConnectForPrivate(ctx context.Context, ch chan WsWriter, key, secret string, channels []string, log *logrus.Logger) {
+	if log == nil {
+		log = logrus.New()
+	}
+
 RECONNECT:
 	conn, _, err := websocket.DefaultDialer.Dial(USE1, nil)
 	if err != nil {
@@ -98,6 +101,7 @@ RECONNECT:
 	if err != nil {
 		log.Fatalf("disconnect %v", err)
 	}
+	defer unsubscribe(conn, requests)
 
 	var eg errgroup.Group
 	eg.Go(func() error {
@@ -150,19 +154,32 @@ RECONNECT:
 		}
 	})
 
-	var isFinished bool
 	if err := eg.Wait(); err != nil {
-		if strings.Contains(err.Error(), "context canceled") {
-			isFinished = true
-		}
 		log.Errorf("%v", err)
+
+		// 外部からのキャンセル
+		if strings.Contains(err.Error(), context.Canceled.Error()) {
+			// defer close()/unsubscribe()
+			return
+		}
 	}
 
 	// 明示的 Unsubscribed
 	// context.cancel()された場合は
 	unsubscribe(conn, requests)
 
-	if !isFinished {
-		goto RECONNECT
+	// Maintenanceならば待機
+	// Maintenanceでなければ、即再接続
+	if isMentenance() {
+		log.Errorf("bitflyer is mentenance time, in %s", time.Now().Format("2006/01/02 15:04:05"))
+		for {
+			if !isMentenance() {
+				break
+			}
+			time.Sleep(time.Second)
+		}
+		log.Errorf("bitflyer mentenance is done, in %s", time.Now().Format("2006/01/02 15:04:05"))
 	}
+
+	goto RECONNECT
 }
