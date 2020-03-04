@@ -69,8 +69,11 @@ import	"github.com/go-numb/go-bitflyer/v1/jsonrpc"
 func main() {
   done := make(chen struct{})
 
+  // log can be rewritten as nil
+  log := logrus.New()
+
   recieve := make(chan WsWriter)
-	ctx, cancel := context.WithCancel(context.Background())
+  ctx, cancel := context.WithCancel(context.Background())
 
   go jsonrpc.Connect(ctx, recieve, []string{
 		"lightning_board_snapshot",
@@ -81,12 +84,12 @@ func main() {
 		string(types.FXBTCJPY),
 		string(types.BTCJPY),
 		string(types.ETHJPY),
-  })
+  },log)
   
   go jsonrpc.ConnectForPrivate(ctx, recieve, <API_KEY>, <API_SECRET>, []string{
 		"child_order_events",
 		"parent_order_events",
-	})
+	},log)
 
 	go func() {
 		for {
