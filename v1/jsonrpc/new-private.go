@@ -126,6 +126,12 @@ RECONNECT:
 			var w WsWriter
 
 			switch {
+			case strings.HasPrefix(name, "lightning_ticker"):
+				w.Types = Ticker
+				if err := json.Unmarshal(data, &w.Ticker); err != nil {
+					continue
+				}
+
 			case strings.HasPrefix(name, "child_order_events"):
 				w.Types = ChildOrders
 				if err := json.Unmarshal(data, &w.ChildOrderEvent); err != nil {
