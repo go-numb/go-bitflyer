@@ -87,6 +87,7 @@ func requests(conn *websocket.Conn, channels, symbols []string) (requests []Requ
 
 func unsubscribe(conn *websocket.Conn, requests []Request) {
 	for i := range requests {
+		requests[i].Method = "unsubscribe"
 		if err := conn.WriteJSON(requests[i]); err != nil {
 			fmt.Printf("%+v\n", err)
 		}
