@@ -38,7 +38,17 @@ type SFDFactors struct {
 func (p *Response) SFDFactor() *SFDFactors {
 	s := new(SFDFactors)
 
+	// // ReasonCode
+	// CLEARING_COLL: 取引
+	// CANCEL_COLL: 現物口座への引出し
+	// POST_COLL: 証拠金口座への預入れ
+	// EXCHANGE_COLL: Liquidation
+	// SFD: SFD付与・徴収
+
 	for _, v := range *p {
+		if !strings.Contains(v.ReasonCode, "SFD") {
+			continue
+		}
 		if 0 < v.Change {
 			s.successCount++
 			s.success += v.Change
