@@ -17,7 +17,7 @@ type Account struct {
 }
 
 const (
-	APIPath string = "/v1/me/getcollateralaccounts"
+	APIPath string = "/v1/me/getcollateralhistory"
 )
 
 func (req *Request) Method() string {

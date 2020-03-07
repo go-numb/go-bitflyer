@@ -15,6 +15,7 @@ import (
 	"github.com/go-numb/go-bitflyer/v1/private/coinouts"
 	"github.com/go-numb/go-bitflyer/v1/private/collateral"
 	ex "github.com/go-numb/go-bitflyer/v1/private/executions"
+	"github.com/go-numb/go-bitflyer/v1/private/histories"
 	"github.com/go-numb/go-bitflyer/v1/private/orders/single"
 	"github.com/go-numb/go-bitflyer/v1/private/orders/sp"
 	"github.com/go-numb/go-bitflyer/v1/private/permissions"
@@ -250,6 +251,15 @@ func (c *Client) ExecutionsMe(req *ex.Request) (*ex.Response, *http.Response, er
 func (c *Client) ChildOrdersMe(req *childorders.Request) (*childorders.Response, *http.Response, error) {
 	res := new(childorders.Response)
 	raw, err := httpclient.New().Auth(c.AuthConfig).Request(NewAPI(c, childorders.APIPath), req, res)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "sends request")
+	}
+	return res, raw, nil
+}
+
+func (c *Client) Histories(req *histories.Request) (*histories.Response, *http.Response, error) {
+	res := new(histories.Response)
+	raw, err := httpclient.New().Auth(c.AuthConfig).Request(NewAPI(c, histories.APIPath), req, res)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "sends request")
 	}
