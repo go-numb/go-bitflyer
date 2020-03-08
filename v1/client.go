@@ -41,7 +41,7 @@ type Client struct {
 
 	HTTPClient *httpclient.Client
 
-	// AuthConfig *auth.AuthConfig
+	AuthConfig *auth.AuthConfig
 	// httpClient *http.Client
 }
 
@@ -56,6 +56,7 @@ func NewClient(opts *ClientOpts) *Client {
 		HTTPClient: httpclient.New(&http.Client{
 			Timeout: 10 * time.Second,
 		}, opts.AuthConfig),
+		AuthConfig: opts.AuthConfig,
 	}
 }
 
