@@ -5,7 +5,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"time"
 
 	api "github.com/go-numb/go-bitflyer"
 	"github.com/go-numb/go-bitflyer/auth"
@@ -17,23 +16,26 @@ var (
 	json = jsoniter.ConfigCompatibleWithStandardLibrary
 )
 
-type client struct {
-	conf *auth.AuthConfig
+type Client struct {
+	conf   *auth.AuthConfig
+	client *http.Client
 }
 
-func New() *client {
-	return &client{}
+func New(h *http.Client, conf *auth.AuthConfig) *Client {
+	return &Client{
+		conf:   conf,
+		client: h,
+	}
 }
 
-func (p *client) Auth(conf *auth.AuthConfig) *client {
-	p.conf = conf
+func (p *Client) Auth() *Client {
 	return p
 }
 
 // Request response
 // APILimit.Private(req.Header)
 // APILimit.Public(req.Header)
-func (p *client) Request(api api.API, req api.Request, result interface{}) (*http.Response, error) {
+func (p *Client) Request(api api.API, req api.Request, result interface{}) (*http.Response, error) {
 	u, err := api.ToURL()
 	if err != nil {
 		return nil, errors.Wrapf(err, "set base url")
@@ -68,9 +70,9 @@ func (p *client) Request(api api.API, req api.Request, result interface{}) (*htt
 		r.Header.Set("Content-Type", "application/json")
 	}
 
-	c := &http.Client{
-		Timeout: 10 * time.Second,
-	}
+	// c := &http.Client{
+	// 	Timeout: 10 * time.Second,
+	// }
 
 	/* Header's at 2019/08/28
 	&{Status:200 OK
@@ -117,7 +119,7 @@ func (p *client) Request(api api.API, req api.Request, result interface{}) (*htt
 	TLS:}
 	*/
 
-	res, err := c.Do(r)
+	res, err := p.client.Do(r)
 	if err != nil {
 		return nil, errors.Wrapf(err, "requests do something to url: %s", u.String())
 	}

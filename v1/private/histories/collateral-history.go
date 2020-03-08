@@ -35,8 +35,10 @@ type SFDFactors struct {
 	success, fail           float64
 }
 
-func (p *Response) SFDFactor() *SFDFactors {
-	s := new(SFDFactors)
+func (p *Response) SFDFactor(s *SFDFactors) *SFDFactors {
+	if s == nil {
+		s = new(SFDFactors)
+	}
 
 	// // ReasonCode
 	// CLEARING_COLL: 取引
