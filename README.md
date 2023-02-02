@@ -1,4 +1,7 @@
 # go-bitflyer
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+
 
 Bitflyer exchange API version1, renew at 2023/02.
 
@@ -11,6 +14,43 @@ go-bitflyer is a go client library for [Bitflyer lightning API](https://lightnin
 - [x] All Private API
 - [x] GUI's Hidden API
 - [x] Websocket
+
+
+# Usage
+| Client   | Functions                                                                                     |
+| -------- | --------------------------------------------------------------------------------------------- |
+| Public   | Status(&Request{}) (res, apiLimit, err)                                                       |
+| Public   | Helth(&Request{}) (res, apiLimit, err)                                                        |
+| Public   | Ticker(&Request{}) (res, apiLimit, err)                                                       |
+| Public   | Market(&Request{}) (res, apiLimit, err)                                                       |
+| Public   | Board(&Request{}) (res, apiLimit, err)                                                        |
+| Public   | Executions(&Request{})                                                                        |
+| Public   | Chat(&Request{}) (res, apiLimit, err)                                                         |
+| Private  | Permissions(&Request{}) (res, apiLimit, err)                                                  |
+| Private  | Balance(&Request{}) (res, apiLimit, err)                                                      |
+| Private  | Collateral(&Request{}) (res, apiLimit, err)                                                   |
+| Private  | CollateralAccounts(&Request{}) (res, apiLimit, err)                                           |
+| Private  | Addresses(&Request{}) (res, apiLimit, err)                                                    |
+| Private  | Coinins(&Request{}) (res, apiLimit, err)                                                      |
+| Private  | Coinouts(&Request{}) (res, apiLimit, err)                                                     |
+| Private  | Banks(&Request{}) (res, apiLimit, err)                                                        |
+| Private  | Deposits(&Request{}) (res, apiLimit, err)                                                     |
+| Private  | Withdrawals(&Request{}) (res, apiLimit, err)                                                  |
+| Private  | ChildOrder(&Request{}) (res, apiLimit, err)                                                   |
+| Private  | CancelChildOrder(&Request{}) (res, apiLimit, err)                                             |
+| Private  | ParentOrder(&Request{}) (res, apiLimit, err)                                                  |
+| Private  | CancelParentOrder(&Request{}) (res, apiLimit, err)                                            |
+| Private  | Cancel(&Request{}) (res, apiLimit, err)                                                       |
+| Private  | ChildOrders(&Request{}) (res, apiLimit, err)                                                  |
+| Private  | DetailParentOrder(&Request{}) (res, apiLimit, err)                                            |
+| Private  | MyExecutions(&Request{}) (res, apiLimit, err)                                                 |
+| Private  | BalanceHistory(&Request{}) (res, apiLimit, err)                                               |
+| Private  | Positions(&Request{}) (res, apiLimit, err)                                                    |
+| Private  | CollateralHistory(&Request{}) (res, apiLimit, err)                                            |
+| Private  | Commission(&Request{}) (res, apiLimit, err)                                                   |
+| Hiddn    | OHLCv(&Request{}) (res, err)                                                                  |
+| Hiddn    | Ranking(&Request{}) (res, err)                                                                |
+| Realtime | Connect(&auth, []string{"channels"...}, []string{"product_codes..."...}, chan Response) error |
 
 
 ```go HTTP API
