@@ -8,9 +8,10 @@ import (
 
 	"github.com/buger/jsonparser"
 	"github.com/go-numb/go-bitflyer/private/auth"
+	"github.com/gorilla/websocket"
 )
 
-func (p *Client) subscribe(conf *auth.Client, requests []Request) error {
+func (p *Client) subscribe(conf *auth.Client, requests []*Request) error {
 	log.Print("start subscribe------------")
 	if conf != nil {
 		if err := p.conn.WriteJSON(_auth(conf)); err != nil {
@@ -19,7 +20,9 @@ func (p *Client) subscribe(conf *auth.Client, requests []Request) error {
 
 		_, msg, err := p.conn.ReadMessage()
 		if err != nil {
-			return fmt.Errorf("can't receive error: %v", err)
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				return fmt.Errorf("can't receive error: %v", err)
+			}
 		}
 
 		if err := success("auth", msg); err != nil {
@@ -32,7 +35,7 @@ func (p *Client) subscribe(conf *auth.Client, requests []Request) error {
 	for i := range requests {
 		channelname, isThere := requests[i].Params[CHANNEL].(string)
 		if !isThere {
-			channelname = requests[i].Params["api_key"].(string)
+			continue
 		}
 
 		if err := p.conn.WriteJSON(requests[i]); err != nil {
@@ -41,7 +44,9 @@ func (p *Client) subscribe(conf *auth.Client, requests []Request) error {
 
 		_, msg, err := p.conn.ReadMessage()
 		if err != nil {
-			return fmt.Errorf("can't receive error: %v", err)
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				return fmt.Errorf("can't receive error: %v", err)
+			}
 		}
 
 		if err := success(channelname, msg); err != nil {
@@ -55,7 +60,7 @@ func (p *Client) subscribe(conf *auth.Client, requests []Request) error {
 	return nil
 }
 
-func (p *Client) unsubscribe(requests []Request) error {
+func (p *Client) unsubscribe(requests []*Request) error {
 	log.Print("start [un]subscribe------------")
 	for i := range requests {
 		requests[i].Method = "unsubscribe"
@@ -69,12 +74,12 @@ func (p *Client) unsubscribe(requests []Request) error {
 	return nil
 }
 
-func _createRequester(conf *auth.Client, channels, symbols []string) []Request {
-	req := make([]Request, 0)
+func _createRequester(conf *auth.Client, channels, symbols []string) []*Request {
+	req := make([]*Request, 0)
 
 	for i := 0; i < len(channels); i++ {
 		for j := 0; j < len(symbols); j++ {
-			req = append(req, Request{
+			req = append(req, &Request{
 				Jsonrpc: JSONRPCV,
 				Method:  SUBSCRIBE,
 				Params: map[string]interface{}{
@@ -86,7 +91,7 @@ func _createRequester(conf *auth.Client, channels, symbols []string) []Request {
 	}
 
 	if conf != nil {
-		req = append(req, Request{
+		req = append(req, &Request{
 			Jsonrpc: JSONRPCV,
 			Method:  SUBSCRIBE,
 			Params: map[string]interface{}{
@@ -95,7 +100,7 @@ func _createRequester(conf *auth.Client, channels, symbols []string) []Request {
 			ID: len(req),
 		})
 
-		req = append(req, Request{
+		req = append(req, &Request{
 			Jsonrpc: JSONRPCV,
 			Method:  SUBSCRIBE,
 			Params: map[string]interface{}{
@@ -117,10 +122,10 @@ func _createRequester(conf *auth.Client, channels, symbols []string) []Request {
 	return req
 }
 
-func _auth(conf *auth.Client) Request {
+func _auth(conf *auth.Client) *Request {
 	key, _ := conf.Get()
 	now, nonce, sign := conf.WsParamForPrivate()
-	return Request{
+	return &Request{
 		Jsonrpc: JSONRPCV,
 		Method:  AUTH,
 		Params: map[string]interface{}{
@@ -142,21 +147,21 @@ func success(channelname string, msg []byte) error {
 	}
 	errmsg, err := jsonparser.GetString(msg, "error")
 	if err == nil && errmsg != "" {
-		log.Printf("[ERROR] id: %d, channel: %s, err msg: %s\n", id, channelname, errmsg)
+		return fmt.Errorf("[ERROR] get error param, id: %d, channel: %s, err msg: %s", id, channelname, errmsg)
 	}
-
-	log.Printf("id: %d, subscribed: %s, success: %t\n", id, channelname, result)
 
 	if !result {
-		return fmt.Errorf("id: %d, channel: %s, return false cause subscribed error, %s", id, channelname, errmsg)
+		return fmt.Errorf("[ERROR] subscribed error, id: %d, channel: %s, return %v, %s", id, channelname, result, errmsg)
 	}
+
+	log.Printf("[INFO] subscribed,  id: %d, subscribed: %s, success: %t\n", id, channelname, result)
 
 	return nil
 }
 
 func _checkWebsocketErr(err error, errStruct interface{}) error {
 	if err := json.Unmarshal([]byte(err.Error()), errStruct); err != nil {
-		return fmt.Errorf("err unmarshal error, %s", err.Error())
+		return fmt.Errorf("[ERROR] unmarshal error, %s", err.Error())
 	}
 	return nil
 }
