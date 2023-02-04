@@ -1,5 +1,6 @@
 # go-bitflyer
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GoDoc](https://godoc.org/github.com/go-numb/go-bitflyer?status.svg)](https://pkg.go.dev/github.com/go-numb/go-bitflyer)
 
 
 
@@ -48,8 +49,8 @@ go-bitflyer is a go client library for [Bitflyer lightning API](https://lightnin
 | Private  | Positions(&Request{}) (res, apiLimit, err)                                                    |
 | Private  | CollateralHistory(&Request{}) (res, apiLimit, err)                                            |
 | Private  | Commission(&Request{}) (res, apiLimit, err)                                                   |
-| Hiddn    | OHLCv(&Request{}) (res, err)                                                                  |
-| Hiddn    | Ranking(&Request{}) (res, err)                                                                |
+| Hidden   | OHLCv(&Request{}) (res, err)                                                                  |
+| Hidden   | Ranking(&Request{}) (res, err)                                                                |
 | Realtime | Connect(&auth, []string{"channels"...}, []string{"product_codes..."...}, chan Response) error |
 
 

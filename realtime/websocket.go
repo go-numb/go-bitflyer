@@ -70,14 +70,12 @@ L:
 			if err != nil {
 				var er = new(websocket.CloseError)
 				if err := _checkWebsocketErr(err, er); err != nil {
-					return err
+					return fmt.Errorf("%s, %v, msg: %v", err.Error(), er, string(msg))
 				}
 
 				if er.Code == websocket.CloseAbnormalClosure {
 					continue
 				}
-
-				p.conn.WriteMessage(websocket.BinaryMessage, []byte(`ping`))
 
 				send <- res._set(err)
 				continue
