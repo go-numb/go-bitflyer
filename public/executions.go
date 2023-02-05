@@ -1,7 +1,10 @@
 package public
 
 import (
+	"fmt"
 	"net/http"
+	"strings"
+	"time"
 
 	"github.com/google/go-querystring/query"
 )
@@ -45,4 +48,43 @@ func (req *Executions) Query() string {
 
 func (req *Executions) Payload() []byte {
 	return nil
+}
+
+// Optional
+
+func (p *Execution) IsLiquidation() bool {
+	if !strings.HasPrefix(p.BuyChildOrderAcceptanceID, "JRF") {
+		return true
+	}
+	if !strings.HasPrefix(p.SellChildOrderAcceptanceID, "JRF") {
+		return true
+	}
+
+	return false
+}
+
+const (
+	layout = "20060102-150405"
+)
+
+// ToDate changed time from order_id
+// Values that appear to be milliseconds below seconds are likely to be random numbers.
+func (p *Execution) ToDate() []time.Time {
+	ru := []rune(p.BuyChildOrderAcceptanceID)[3:]
+	s := string(ru[:15])
+	buy, err := time.Parse(layout, s)
+	if err != nil {
+		fmt.Println(buy)
+		return nil
+	}
+
+	ru = []rune(p.SellChildOrderAcceptanceID)[3:]
+	s = string(ru[:15])
+	fmt.Println(s)
+	sell, err := time.Parse(layout, s)
+	if err != nil {
+		return nil
+	}
+
+	return []time.Time{buy, sell}
 }
