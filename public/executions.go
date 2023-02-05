@@ -88,3 +88,9 @@ func (p *Execution) ToDate() []time.Time {
 
 	return []time.Time{buy, sell}
 }
+
+// ToUniqueID create uid: `buyXXX_sellXXX`
+// Buy or Sell oneside ID does not make Execition unique id.
+func (p *Execution) ToUniqueID() string {
+	return strings.Join([]string{p.BuyChildOrderAcceptanceID, p.SellChildOrderAcceptanceID}, "_")
+}
