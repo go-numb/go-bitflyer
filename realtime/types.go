@@ -93,6 +93,7 @@ type ChildOrder struct {
 	ChildOrderAcceptanceID string  `json:"child_order_acceptance_id"`
 	EventDate              string  `json:"event_date"`
 	EventType              string  `json:"event_type"`
+	ExecID                 int     `json:"exec_id,omitempty"`
 	ChildOrderType         string  `json:"child_order_type,omitempty"`
 	Side                   string  `json:"side,omitempty"`
 	Price                  int     `json:"price"`
