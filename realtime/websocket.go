@@ -17,6 +17,7 @@ import (
 const (
 	ENDPOINT                   = "wss://ws.lightstream.bitflyer.com/json-rpc"
 	READDEADLINE time.Duration = 300 * time.Second
+	PINGTIMER    time.Duration = 3 * time.Minute
 )
 
 type Client struct {
@@ -44,9 +45,13 @@ func (p *Client) Close() error {
 	return nil
 }
 
-func (p *Client) Connect(conf *auth.Client, channels, symbols []string, send chan Response) error {
+func (p *Client) Connect(conf *auth.Client, channels, symbols []string, send chan Response) {
 	defer log.Println("defer is end, completed websocket connect")
 	defer p.Close()
+
+	p.conn.SetPongHandler(func(data string) error {
+		return nil
+	})
 
 	requests := _createRequester(conf, channels, symbols)
 	if err := p.subscribe(
@@ -57,24 +62,19 @@ func (p *Client) Connect(conf *auth.Client, channels, symbols []string, send cha
 	}
 	defer p.unsubscribe(requests)
 
-L:
-	for {
-		select {
-		case <-p.ctx.Done():
-			log.Println("recived context cancel from parent, websocket closed")
-			break L
-
-		default:
+	go func() {
+		for {
 			res := new(Response)
 			_, msg, err := p.conn.ReadMessage()
 			if err != nil {
-				var er = new(websocket.CloseError)
-				if err := _checkWebsocketErr(err, er); err != nil {
-					return fmt.Errorf("%s, %v, msg: %v", err.Error(), er, string(msg))
-				}
-
-				if er.Code == websocket.CloseAbnormalClosure {
+				if websocket.IsCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 					continue
+				} else if strings.Contains(err.Error(), "scheduled maintenance") { // maintenance
+					send <- res._set(fmt.Errorf("%v, closed read websocket", err))
+					// can be detected by the receiver, so it tells the receiver to terminate.
+					time.Sleep(time.Second)
+					close(send)
+					return
 				}
 
 				send <- res._set(err)
@@ -150,7 +150,23 @@ L:
 
 			send <- *res
 		}
-	}
+	}()
 
-	return p.ctx.Err()
+	go func() {
+		t := time.NewTicker(PINGTIMER)
+		defer t.Stop()
+		for {
+			select {
+			case <-p.ctx.Done():
+				return
+			case <-t.C:
+				if err := p.conn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
+					log.Println("websocket ping error, ", err.Error())
+				}
+			}
+		}
+	}()
+
+	<-p.ctx.Done()
+	log.Println("recived context cancel from parent, websocket closed")
 }

@@ -69,6 +69,7 @@ type Request struct {
 }
 
 func (p *Response) _set(err error) Response {
+	p.Types = ErrorN
 	p.Results = err
 	return *p
 }

@@ -9,6 +9,7 @@ require (
 	github.com/google/go-querystring v1.1.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/stretchr/testify v1.8.1
+	github.com/tcnksm/go-httpstat v0.2.0
 )
 
 require (

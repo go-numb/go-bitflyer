@@ -3,14 +3,90 @@ package bitflyer
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/go-numb/go-bitflyer/public"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/tcnksm/go-httpstat"
 )
+
+func TestRequestClientResolver(t *testing.T) {
+
+	var (
+		urls = []string{
+			V1,
+			V1 + "getmarkets",
+			V1 + "board",
+		}
+	)
+
+	client := &http.Client{
+		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+			// DisableKeepAlives: true,
+		},
+	}
+	log.Println("start reduce")
+	for _, url := range urls {
+		log.Printf("GET %s", url)
+
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			panic(err)
+		}
+		result := new(httpstat.Result)
+		ctx := httpstat.WithHTTPStat(req.Context(), result)
+		req = req.WithContext(ctx)
+
+		resp, err := client.Do(req)
+		if err != nil {
+			panic(err)
+		}
+		io.Copy(ioutil.Discard, resp.Body)
+		resp.Body.Close()
+
+		result.End(time.Now())
+		log.Printf("%+v\n", result)
+	}
+
+	log.Println("start new client")
+	for _, url := range urls {
+		client := &http.Client{
+			Transport: &http.Transport{
+				Proxy: http.ProxyFromEnvironment,
+				// DisableKeepAlives: true,
+			},
+		}
+		log.Printf("GET %s", url)
+
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			panic(err)
+		}
+		result := new(httpstat.Result)
+		ctx := httpstat.WithHTTPStat(req.Context(), result)
+		req = req.WithContext(ctx)
+
+		resp, err := client.Do(req)
+		if err != nil {
+			panic(err)
+		}
+		io.Copy(ioutil.Discard, resp.Body)
+		resp.Body.Close()
+
+		result.End(time.Now())
+		log.Printf("%+v\n", result)
+	}
+
+}
 
 func TestMarkets(t *testing.T) {
 	client := New("", "")

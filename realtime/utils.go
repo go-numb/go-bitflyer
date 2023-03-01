@@ -21,8 +21,9 @@ func (p *Client) subscribe(conf *auth.Client, requests []*Request) error {
 		_, msg, err := p.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				return fmt.Errorf("can't receive error: %v", err)
+				return err
 			}
+			log.Printf("[Ignore ERROR] can't receive error: %v", err)
 		}
 
 		if err := success("auth", msg); err != nil {
@@ -45,8 +46,9 @@ func (p *Client) subscribe(conf *auth.Client, requests []*Request) error {
 		_, msg, err := p.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				return fmt.Errorf("can't receive error: %v", err)
+				return err
 			}
+			log.Printf("[Ignore ERROR] can't receive error: %v", err)
 		}
 
 		if err := success(channelname, msg); err != nil {

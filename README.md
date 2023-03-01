@@ -25,7 +25,7 @@ go-bitflyer is a go client library for [Bitflyer lightning API](https://lightnin
 | Public   | Ticker(&Request{}) (res, apiLimit, err)                                                       |
 | Public   | Market(&Request{}) (res, apiLimit, err)                                                       |
 | Public   | Board(&Request{}) (res, apiLimit, err)                                                        |
-| Public   | Executions(&Request{})                                                                        |
+| Public   | Executions(&Request{}) (res, apiLimit, err)                                                   |
 | Public   | Chat(&Request{}) (res, apiLimit, err)                                                         |
 | Private  | Permissions(&Request{}) (res, apiLimit, err)                                                  |
 | Private  | Balance(&Request{}) (res, apiLimit, err)                                                      |
@@ -59,7 +59,9 @@ go-bitflyer is a go client library for [Bitflyer lightning API](https://lightnin
 package main
 
 func main() {
-    client := bitflyer.New(os.Getenv("BF_KEY"), os.Getenv("BF_SECRET"))
+    client := bitflyer.New(
+		os.Getenv("BF_KEY"),
+		os.Getenv("BF_SECRET"))
 
     results, managedApiLimit, err := client.Executions(&public.Executions{
         ProductCode: "BTC_JPY",
@@ -68,11 +70,11 @@ func main() {
         log.Fatal(err)
     }
 
-    for _, v := range *res {
+    for _, v := range *results {
         fmt.Println(v)
         // -> {2430391013 BUY 2.989057e+06 0.02 2025-01-01T08:47:20.577 JRF20250101-084720-050159 JRF20250101-084720-042209}...
     }
-    fmt.Println(manage.Remain)
+    fmt.Println(managedApiLimit.Remain)
     // API Limit remain and more
     // -> 489
 
@@ -88,8 +90,8 @@ func main() {
 
     for _, v := range ohlcv {
         fmt.Println(v)
-        // -> C, H, L, O, Timestamp, V 
-		// 0: 3003659 3004234 3003143 3003503 2023-02-01T21:01:00+09:00 3.131921
+        // -> O, H, L, C, V, Volume(1day), Y(null), Timestamp
+		// 0: 3003659 3004234 3003143 3003503 3.131921 311.1 0 2023-02-01T21:01:00+09:00
     }
 }
 
@@ -114,7 +116,9 @@ import (
 )
 
 func main() {
-	client := bitflyer.New("xxxxxxxxxxxxxxxxxxx", "xxxxxxxxxxxxxxxxxxxxxxxx=")
+	client := bitflyer.New(
+		"xxxxxxxxxxxxxxxxxxx",
+		"xxxxxxxxxxxxxxxxxxxxxxxx=")
 
     // cancel goroutine from this function
 	ctx, cancel := context.WithCancel(context.Background())
@@ -123,6 +127,8 @@ func main() {
 
     // recive data and notification form websocket
 	recived := make(chan realtime.Response, 3)
+	// This Connect is sharping binary data, to each struct.
+	// There's also a class that handles raw data. use realtime\raw.go
 	go ws.Connect(
         // Connect to Private, if struct *Auth. 
 		client.Auth, // or nil, when not subscribe to private channel
@@ -176,6 +182,8 @@ L:
 				fmt.Println("parent order comming, ", v.ParentOrders[0].ParentOrderID)
 
 			default:
+				// can be detected by the receiver as such this loop, so it tells the receiver to terminate.
+				// you can check contains "scheduled maintenance" into error.
 				fmt.Printf("error or undefind: %#v", v)
 			}
 
