@@ -34,7 +34,7 @@ func (p *Client) subscribe(conf *auth.Client, requests []*Request) error {
 	}
 
 	for i := range requests {
-		channelname, isThere := requests[i].Params[CHANNEL].(string)
+		_, isThere := requests[i].Params[CHANNEL].(string)
 		if !isThere {
 			continue
 		}
@@ -43,17 +43,6 @@ func (p *Client) subscribe(conf *auth.Client, requests []*Request) error {
 			return err
 		}
 
-		_, msg, err := p.conn.ReadMessage()
-		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				return err
-			}
-			log.Printf("[Ignore ERROR] can't receive error: %v", err)
-		}
-
-		if err := success(channelname, msg); err != nil {
-			return err
-		}
 		time.Sleep(time.Second)
 	}
 
