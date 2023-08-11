@@ -1,6 +1,6 @@
 # go-bitflyer
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![GoDoc](https://godoc.org/github.com/go-numb/go-bitflyer?status.svg)](https://pkg.go.dev/github.com/go-numb/go-bitflyer)
+[![GoDoc](https://godoc.org/github.com/rluisr/go-bitflyer?status.svg)](https://pkg.go.dev/github.com/rluisr/go-bitflyer)
 
 
 
@@ -109,10 +109,10 @@ import (
 	"log"
 	"time"
 
-	"github.com/go-numb/go-bitflyer"
-	"github.com/go-numb/go-bitflyer/public"
-	"github.com/go-numb/go-bitflyer/realtime"
-	"github.com/go-numb/go-bitflyer/types"
+	"github.com/rluisr/go-bitflyer"
+	"github.com/rluisr/go-bitflyer/public"
+	"github.com/rluisr/go-bitflyer/realtime"
+	"github.com/rluisr/go-bitflyer/types"
 )
 
 func main() {
@@ -201,4 +201,4 @@ L:
 
 ## License
 
-[MIT](https://github.com/go-numb/go-bitflyer/blob/master/LICENSE)
+[MIT](https://github.com/rluisr/go-bitflyer/blob/master/LICENSE)

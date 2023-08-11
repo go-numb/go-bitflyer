@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/buger/jsonparser"
-	"github.com/go-numb/go-bitflyer/private/auth"
 	"github.com/gorilla/websocket"
+	"github.com/rluisr/go-bitflyer/private/auth"
 )
 
 func (p *Client) subscribe(conf *auth.Client, requests []*Request) error {

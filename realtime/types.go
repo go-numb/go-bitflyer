@@ -1,7 +1,7 @@
 package realtime
 
 import (
-	"github.com/go-numb/go-bitflyer/public"
+	"github.com/rluisr/go-bitflyer/public"
 )
 
 const (

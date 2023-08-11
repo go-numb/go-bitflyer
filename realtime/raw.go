@@ -3,8 +3,8 @@ package realtime
 import (
 	"log"
 
-	"github.com/go-numb/go-bitflyer/private/auth"
 	"github.com/gorilla/websocket"
+	"github.com/rluisr/go-bitflyer/private/auth"
 )
 
 // If you want to utilize raw data

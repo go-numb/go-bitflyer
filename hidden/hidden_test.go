@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-gota/gota/dataframe"
 	"github.com/go-gota/gota/series"
-	"github.com/go-numb/go-bitflyer/types"
+	"github.com/rluisr/go-bitflyer/types"
 )
 
 func TestOHLCv(t *testing.T) {

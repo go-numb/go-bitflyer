@@ -1,7 +1,7 @@
 package bitflyer
 
 import (
-	"github.com/go-numb/go-bitflyer/public"
+	"github.com/rluisr/go-bitflyer/public"
 )
 
 func (p *Client) Status(req *public.Status) (*public.ResponseForStatus, *APILimit, error) {

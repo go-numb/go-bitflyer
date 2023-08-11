@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-numb/go-bitflyer/public"
+	"github.com/rluisr/go-bitflyer/public"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/tcnksm/go-httpstat"

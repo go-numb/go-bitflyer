@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-numb/go-bitflyer/private/auth"
 	"github.com/gorilla/websocket"
+	"github.com/rluisr/go-bitflyer/private/auth"
 
 	"github.com/buger/jsonparser"
 )

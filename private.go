@@ -1,7 +1,7 @@
 package bitflyer
 
 import (
-	"github.com/go-numb/go-bitflyer/private"
+	"github.com/rluisr/go-bitflyer/private"
 )
 
 func (p *Client) Permissions(req *private.Permissions) ([]string, *APILimit, error) {

@@ -12,8 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-numb/go-bitflyer/hidden"
-	"github.com/go-numb/go-bitflyer/private/auth"
+	"github.com/rluisr/go-bitflyer/private/auth"
 )
 
 const (

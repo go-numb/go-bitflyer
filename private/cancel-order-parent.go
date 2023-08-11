@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/go-numb/go-bitflyer/types"
 	"github.com/google/go-querystring/query"
+	"github.com/rluisr/go-bitflyer/types"
 )
 
 type CancelParentOrder struct {

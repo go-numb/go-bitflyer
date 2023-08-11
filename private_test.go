@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/go-numb/go-bitflyer/private"
+	"github.com/rluisr/go-bitflyer/private"
 )
 
 const (
