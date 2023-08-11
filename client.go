@@ -21,15 +21,15 @@ const (
 )
 
 type Client struct {
-	h *http.Client
+	httpClient *http.Client
 	// Auth
 	Auth *auth.Client
 }
 
-func New(key, secret string) *Client {
+func New(key, secret string, httpClient *http.Client) *Client {
 	return &Client{
-		h:    _newClient(),
-		Auth: auth.New(key, secret),
+		httpClient: httpClient,
+		Auth:       auth.New(key, secret),
 	}
 }
 
@@ -87,7 +87,7 @@ func (p *Client) request(req Require, results interface{}) (*APILimit, error) {
 func (p *Client) _do(req Require) (*http.Response, error) {
 	r := p._newRequest(req)
 
-	res, err := p.h.Do(r)
+	res, err := p.httpClient.Do(r)
 	if err != nil {
 		return nil, err
 	}
@@ -108,12 +108,6 @@ func (p *Client) _do(req Require) (*http.Response, error) {
 	}
 
 	return res, nil
-}
-
-func _newClient() *http.Client {
-	c := http.DefaultClient
-	c.Timeout = 3 * time.Second
-	return c
 }
 
 func (p *Client) _newRequest(req Require) *http.Request {
