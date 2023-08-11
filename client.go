@@ -33,10 +33,6 @@ func New(key, secret string, httpClient *http.Client) *Client {
 	}
 }
 
-func CallHidden() *hidden.Client {
-	return &hidden.Client{}
-}
-
 type Require interface {
 	IsPrivate() bool
 	Path() string
