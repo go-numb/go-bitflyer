@@ -45,12 +45,6 @@ const ( // Health
 	STARTING     = "STARTING"
 	PREOPEN      = "PREOPEN"
 	CIRCUITBREAK = "CIRCUIT BREAK"
-
-	AWAITINGSQ = "AWAITING SQ"
-	MATURED    = "MATURED"
-
-	// Lightning Futures の SQ
-	SPECIALQUOTATION = "special_quotation"
 )
 
 const (
