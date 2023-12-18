@@ -21,6 +21,12 @@ type Notif struct {
 	CreatedServerAt time.Time
 }
 
+func New() *Client {
+	return &Client{
+		GetNotif: new(chan Notif),
+	}
+}
+
 // Executor 監視し、本体に通知する
 func (p *Client) Executor(ctx context.Context, symbols ...string) (err error) {
 	ws := realtime.New(ctx)

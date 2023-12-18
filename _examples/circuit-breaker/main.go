@@ -15,5 +15,24 @@ func main() {
 		}
 	}()
 
-	<-ctx.Done()
+Exit:
+	for {
+		select {
+		case v := <-client.GetNotif:
+			if !v.IsBreak {
+				continue
+			}
+			log.Printf("get notifiaction: %v", v)
+			dosometing()
+
+		case <-ctx.Done():
+			break Exit
+		}
+	}
+
+	log.Fatal("done")
+}
+
+func dosomething() {
+	// Do!
 }
