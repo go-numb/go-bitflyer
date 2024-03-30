@@ -153,6 +153,28 @@ func TestTicker(t *testing.T) {
 	fmt.Printf("%s\n", limit.Reset.String())
 }
 
+func TestFr(t *testing.T) {
+	client := New("", "")
+
+	res, limit, err := client.Fr(&public.Fr{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println("results: ", res)
+	fmt.Printf("%s\n", limit.Reset.String())
+}
+
+func TestLeverageC(t *testing.T) {
+	client := New("", "")
+
+	res, limit, err := client.LeverageC(&public.LeverageC{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println("results: ", res)
+	fmt.Printf("%s\n", limit.Reset.String())
+}
+
 func TestChat(t *testing.T) {
 	client := New("", "")
 

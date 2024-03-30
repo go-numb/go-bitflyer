@@ -23,6 +23,24 @@ func (p *Client) Helth(req *public.Helth) (*public.ResponseForHelth, *APILimit, 
 	return res, apiLimit, err
 }
 
+func (p *Client) Fr(req *public.Fr) (*public.ResponseForFr, *APILimit, error) {
+	res := new(public.ResponseForFr)
+	apiLimit, err := p.request(req, res)
+	if err != nil {
+		return nil, apiLimit, err
+	}
+	return res, apiLimit, err
+}
+
+func (p *Client) LeverageC(req *public.LeverageC) (*public.ResponseForLeverageC, *APILimit, error) {
+	res := new(public.ResponseForLeverageC)
+	apiLimit, err := p.request(req, res)
+	if err != nil {
+		return nil, apiLimit, err
+	}
+	return res, apiLimit, err
+}
+
 func (p *Client) Ticker(req *public.Ticker) (*public.ResponseForTicker, *APILimit, error) {
 	res := new(public.ResponseForTicker)
 	apiLimit, err := p.request(req, res)
