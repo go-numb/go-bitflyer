@@ -5,6 +5,7 @@
 
 
 Bitflyer exchange API version1, renew at 2023/02.
+Updated for change FX to CFD at 2024/04/01.
 
 ## Description
 
@@ -26,7 +27,9 @@ go-bitflyer is a go client library for [Bitflyer lightning API](https://lightnin
 | Public   | Market(&Request{}) (res, apiLimit, err)                                                       |
 | Public   | Board(&Request{}) (res, apiLimit, err)                                                        |
 | Public   | Executions(&Request{}) (res, apiLimit, err)                                                   |
+| Public   | Fr(&Request{}) (res, apiLimit, err)                                                         |
 | Public   | Chat(&Request{}) (res, apiLimit, err)                                                         |
+| Public   | LeverageC(&Request{}) (res, apiLimit, err)                                                         |
 | Private  | Permissions(&Request{}) (res, apiLimit, err)                                                  |
 | Private  | Balance(&Request{}) (res, apiLimit, err)                                                      |
 | Private  | Collateral(&Request{}) (res, apiLimit, err)                                                   |
