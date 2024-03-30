@@ -33,6 +33,11 @@ func New(key, secret string) *Client {
 	}
 }
 
+func (p *Client) SetClient(c *http.Client) *Client {
+	p.h = c
+	return p
+}
+
 func CallHidden() *hidden.Client {
 	return &hidden.Client{}
 }
